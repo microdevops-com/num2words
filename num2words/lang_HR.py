@@ -134,7 +134,97 @@ class Num2Word_HR(Num2Word_Base):
         return forms[form]
 
     def to_ordinal(self, number):
-        raise NotImplementedError()
+        """Masculine nominative singular ordinal (the default ordinal form).
+
+        Croatian ordinals decline by gender, case, and number — this method
+        returns the unmarked masculine-nominative-singular form (prvi, drugi,
+        peti, sedamnaesti, dvadeseti, stoti, tisućiti, ...). Compound numbers
+        replace only the last cardinal word with its ordinal counterpart.
+        """
+        if int(number) != number:
+            raise ValueError("ordinals only defined for integers")
+        n = int(number)
+        if n in self._ORDINAL_EXACT:
+            return self._ORDINAL_EXACT[n]
+        cardinal_words = self._int2word(n).split()
+        last = cardinal_words[-1]
+        if last not in self._ORDINAL_LAST_MASC:
+            raise NotImplementedError(
+                "Croatian ordinal not defined for last word %r in %r" % (
+                    last, " ".join(cardinal_words)
+                )
+            )
+        cardinal_words[-1] = self._ORDINAL_LAST_MASC[last]
+        return " ".join(cardinal_words)
+
+    def to_year(self, value, **kwargs):
+        """Year form used before 'godine' — feminine-genitive declension.
+
+        Croatian convention reads "1986. godine" as
+        "tisuću devetsto osamdeset šeste godine" (last word = feminine
+        genitive ordinal). The leading "jedna tisuća" of cardinal years
+        1000-1999 collapses to "tisuću".
+        """
+        if int(value) != value:
+            raise ValueError("years only defined for integers")
+        n = int(value)
+        words = self._int2word(n).split()
+        # Collapse "jedna tisuća ..." → "tisuću ..." for years 1000-1999
+        if len(words) >= 2 and words[0] == "jedna" and words[1] == "tisuća":
+            words = ["tisuću"] + words[2:]
+        last = words[-1]
+        if last in self._YEAR_LAST_FEM_GEN:
+            words[-1] = self._YEAR_LAST_FEM_GEN[last]
+        return " ".join(words)
+
+    # Cardinal-last-word → masculine-nominative ordinal
+    _ORDINAL_LAST_MASC = {
+        "jedan": "prvi", "dva": "drugi", "tri": "treći", "četiri": "četvrti",
+        "pet": "peti", "šest": "šesti", "sedam": "sedmi", "osam": "osmi",
+        "devet": "deveti",
+        "deset": "deseti",
+        "jedanaest": "jedanaesti", "dvanaest": "dvanaesti",
+        "trinaest": "trinaesti", "četrnaest": "četrnaesti",
+        "petnaest": "petnaesti", "šesnaest": "šesnaesti",
+        "sedamnaest": "sedamnaesti", "osamnaest": "osamnaesti",
+        "devetnaest": "devetnaesti",
+        "dvadeset": "dvadeseti", "trideset": "trideseti",
+        "četrdeset": "četrdeseti", "pedeset": "pedeseti",
+        "šezdeset": "šezdeseti", "sedamdeset": "sedamdeseti",
+        "osamdeset": "osamdeseti", "devedeset": "devedeseti",
+        "sto": "stoti", "dvjesto": "dvjestoti", "tristo": "tristoti",
+        "četiristo": "četiristoti", "petsto": "petstoti", "šesto": "šestoti",
+        "sedamsto": "sedamstoti", "osamsto": "osamstoti",
+        "devetsto": "devetstoti",
+    }
+
+    # Cardinal-last-word → feminine-genitive ordinal (year form, before "godine")
+    _YEAR_LAST_FEM_GEN = {
+        "jedan": "prve", "dva": "druge", "tri": "treće", "četiri": "četvrte",
+        "pet": "pete", "šest": "šeste", "sedam": "sedme", "osam": "osme",
+        "devet": "devete",
+        "deset": "desete",
+        "jedanaest": "jedanaeste", "dvanaest": "dvanaeste",
+        "trinaest": "trinaeste", "četrnaest": "četrnaeste",
+        "petnaest": "petnaeste", "šesnaest": "šesnaeste",
+        "sedamnaest": "sedamnaeste", "osamnaest": "osamnaeste",
+        "devetnaest": "devetnaeste",
+        "dvadeset": "dvadesete", "trideset": "tridesete",
+        "četrdeset": "četrdesete", "pedeset": "pedesete",
+        "šezdeset": "šezdesete", "sedamdeset": "sedamdesete",
+        "osamdeset": "osamdesete", "devedeset": "devedesete",
+        "sto": "stote", "dvjesto": "dvjestote", "tristo": "tristote",
+        "četiristo": "četiristote", "petsto": "petstote", "šesto": "šestote",
+        "sedamsto": "sedamstote", "osamsto": "osamstote",
+        "devetsto": "devetstote",
+    }
+
+    # Whole-number ordinals where last-word substitution doesn't apply
+    _ORDINAL_EXACT = {
+        1000: "tisućiti",
+        1_000_000: "milijunti",
+        1_000_000_000: "milijarditi",
+    }
 
     def _cents_verbose(self, number, currency):
         return self._int2word(

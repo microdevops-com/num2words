@@ -91,8 +91,81 @@ class Num2WordsHRTest(TestCase):
         )
 
     def test_to_ordinal(self):
-        with self.assertRaises(NotImplementedError):
-            num2words(1, lang='hr', to='ordinal')
+        # ones — irregular forms
+        self.assertEqual("prvi", num2words(1, lang='hr', to='ordinal'))
+        self.assertEqual("drugi", num2words(2, lang='hr', to='ordinal'))
+        self.assertEqual("treći", num2words(3, lang='hr', to='ordinal'))
+        self.assertEqual("četvrti", num2words(4, lang='hr', to='ordinal'))
+        # ones — regular
+        self.assertEqual("peti", num2words(5, lang='hr', to='ordinal'))
+        self.assertEqual("šesti", num2words(6, lang='hr', to='ordinal'))
+        self.assertEqual("sedmi", num2words(7, lang='hr', to='ordinal'))
+        self.assertEqual("osmi", num2words(8, lang='hr', to='ordinal'))
+        self.assertEqual("deveti", num2words(9, lang='hr', to='ordinal'))
+        # tens
+        self.assertEqual("deseti", num2words(10, lang='hr', to='ordinal'))
+        self.assertEqual(
+            "sedamnaesti", num2words(17, lang='hr', to='ordinal')
+        )
+        self.assertEqual(
+            "dvadeseti", num2words(20, lang='hr', to='ordinal')
+        )
+        # compound — only last word becomes ordinal
+        self.assertEqual(
+            "dvadeset prvi", num2words(21, lang='hr', to='ordinal')
+        )
+        self.assertEqual(
+            "trideset peti", num2words(35, lang='hr', to='ordinal')
+        )
+        # hundreds
+        self.assertEqual("stoti", num2words(100, lang='hr', to='ordinal'))
+        self.assertEqual(
+            "sto prvi", num2words(101, lang='hr', to='ordinal')
+        )
+        self.assertEqual(
+            "sto dvadeset peti", num2words(125, lang='hr', to='ordinal')
+        )
+        # thousand — exact 10^k uses dedicated form
+        self.assertEqual(
+            "tisućiti", num2words(1000, lang='hr', to='ordinal')
+        )
+        self.assertEqual(
+            "milijunti", num2words(1_000_000, lang='hr', to='ordinal')
+        )
+        # year-shaped numbers as masculine ordinals
+        self.assertEqual(
+            "jedna tisuća devetsto osamdeset šesti",
+            num2words(1986, lang='hr', to='ordinal')
+        )
+        self.assertEqual(
+            "dvije tisuće dvadeset četvrti",
+            num2words(2024, lang='hr', to='ordinal')
+        )
+
+    def test_to_year(self):
+        # 1000-1999 collapse "jedna tisuća" → "tisuću" and apply fem-gen ending
+        self.assertEqual(
+            "tisuću devetsto osamdeset šeste",
+            num2words(1986, lang='hr', to='year')
+        )
+        self.assertEqual(
+            "tisuću devetsto četrdeset osme",
+            num2words(1948, lang='hr', to='year')
+        )
+        # 2000+ keeps "dvije tisuće ..." prefix; last word still feminine genitive
+        self.assertEqual(
+            "dvije tisuće dvadeset četvrte",
+            num2words(2024, lang='hr', to='year')
+        )
+        self.assertEqual(
+            "dvije tisuće trinaeste",
+            num2words(2013, lang='hr', to='year')
+        )
+        # Round years
+        self.assertEqual(
+            "dvije tisuće",
+            num2words(2000, lang='hr', to='year')
+        )
 
     def test_to_currency(self):
         self.assertEqual(
